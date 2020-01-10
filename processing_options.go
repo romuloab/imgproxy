@@ -971,10 +971,19 @@ func parsePathBasic(parts []string, headers *processingHeaders) (string, *proces
 	return url, po, nil
 }
 
+var striderRegex = regexp.MustCompile(`^/(0|16|24|32|64|100|160|256|320|480|800|1024)/(0|16|24|32|64|96|100|1024)/(http.+)$`)
+
 func parsePath(ctx context.Context, r *http.Request) (context.Context, error) {
 	path := r.URL.RawPath
 	if len(path) == 0 {
 		path = r.URL.Path
+	}
+	match := striderRegex.FindStringSubmatch(path)
+	if len(match) > 0 {
+		if strings.HasPrefix(match[3], "https://striderusercontent.com") {
+			match[3] = "gs" + match[3][5:]
+		}
+		path = fmt.Sprintf("/insecure/fill/%s/%s/sm/0/plain/%s", match[1], match[2], match[3])
 	}
 	parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
 
